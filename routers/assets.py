@@ -4,8 +4,9 @@ from typing import List
 from database import get_db
 from schemas import AssetCreate, AssetOut
 from crud import create_asset, generate_qr_code
-from auth import get_current_user
+from .auth import get_current_user
 from PIL import Image
+from models import Asset
 import io
 
 router = APIRouter()

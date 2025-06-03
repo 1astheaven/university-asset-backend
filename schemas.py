@@ -22,7 +22,7 @@ class UserOut(UserBase):
     id: int
     photo: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class BuildingBase(BaseModel):
     name: str
@@ -32,7 +32,7 @@ class BuildingBase(BaseModel):
 class BuildingOut(BuildingBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class FloorBase(BaseModel):
     building_id: int
@@ -41,7 +41,7 @@ class FloorBase(BaseModel):
 class FloorOut(FloorBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class RoomBase(BaseModel):
     floor_id: int
@@ -50,7 +50,7 @@ class RoomBase(BaseModel):
 class RoomOut(RoomBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AssetBase(BaseModel):
     name: str
@@ -68,7 +68,7 @@ class AssetOut(AssetBase):
     id: int
     commissioned_date: datetime
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str

@@ -4,9 +4,10 @@ from typing import List
 from database import get_db
 from schemas import UserCreate, UserUpdate, UserOut
 from crud import create_user, update_user, get_user_by_email
-from auth import get_current_user
+from .auth import get_current_user
+from models import User
 
-router = APIRouter()
+router = APIRouter(prefix="/users", tags=["Пользователи"])
 
 @router.post("/users/", response_model=UserOut)
 async def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models import User, Building, Floor, Room, Asset
-from schemas import UserCreate, UserUpdate, AssetCreate
+from schemas import UserCreate, UserUpdate, AssetCreate, BuildingBase, FloorBase, RoomBase
 from passlib.context import CryptContext
 import qrcode
 import io

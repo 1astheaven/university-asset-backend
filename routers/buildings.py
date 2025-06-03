@@ -4,6 +4,7 @@ from typing import List
 from database import get_db
 from schemas import BuildingBase, BuildingOut, FloorBase, FloorOut, RoomBase, RoomOut
 from crud import create_building, create_floor, create_room
+from models import Room, Floor, Building
 
 router = APIRouter()
 
