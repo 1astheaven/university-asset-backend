@@ -7,7 +7,7 @@ class UserBase(BaseModel):
     first_name: str
     last_name: str
     middle_name: Optional[str] = None
-    role: str = "user"
+    role: str = "admin"
 
 class UserCreate(UserBase):
     password: str
@@ -73,3 +73,14 @@ class AssetOut(AssetBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    role: str  # Добавьте это поле
+
+class UserOut(BaseModel):
+    id: int
+    email: str
+    role: str
+    first_name: str
+    last_name: str
+
+    class Config:
+        from_attributes = True

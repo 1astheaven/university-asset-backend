@@ -7,11 +7,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    role = Column(String, default="user") # Добавьте это поле
     first_name = Column(String)
     last_name = Column(String)
-    middle_name = Column(String, nullable=True)
-    role = Column(String, default="user")  # пользователь или администратор
-    photo = Column(String, nullable=True)
 
 class Building(Base):
     __tablename__ = "buildings"

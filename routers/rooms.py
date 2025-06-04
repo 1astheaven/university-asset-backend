@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-from schemas import RoomBase, RoomOut
+from schemas import RoomBase, RoomOut, AssetOut
 from crud import create_room
-from models import Floor, Room
+from models import Floor, Room, Asset
 
 router = APIRouter(prefix="/rooms", tags=["Помещения"])
 
@@ -24,3 +24,15 @@ async def list_rooms(floor_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Этаж не найден")
     rooms = db.query(Room).filter(Room.floor_id == floor_id).all()
     return rooms
+
+@router.get("/{room_id}", response_model=RoomOut)
+def get_room(room_id: int, db: Session = Depends(get_db)):
+    room = db.query(Room).filter(Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
+
+@router.get("/{room_id}/assets", response_model=List[AssetOut])
+def get_room_assets(room_id: int, db: Session = Depends(get_db)):
+    assets = db.query(Asset).filter(Asset.room_id == room_id).all()
+    return assets

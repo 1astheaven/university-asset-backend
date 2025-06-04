@@ -8,6 +8,10 @@ from models import Room, Floor, Building
 
 router = APIRouter()
 
+@router.get("/", response_model=List[BuildingOut])
+def get_buildings(db: Session = Depends(get_db)):
+    return db.query(Building).all()
+
 @router.post("/buildings/", response_model=BuildingOut)
 async def create_building_endpoint(building: BuildingBase, db: Session = Depends(get_db)):
     return create_building(db, building)

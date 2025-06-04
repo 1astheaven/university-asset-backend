@@ -1,20 +1,18 @@
 from sqlalchemy.orm import Session
 from models import User, Building, Floor, Room, Asset
 from schemas import UserCreate, UserUpdate, AssetCreate, BuildingBase, FloorBase, RoomBase
-from passlib.context import CryptContext
+import bcrypt
 import qrcode
 import io
 import base64
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
 def create_user(db: Session, user: UserCreate):
-    if user.password != user.confirm_password:
-        raise ValueError("Пароли не совпадают")
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     db_user = User(
         email=user.email,
         hashed_password=hashed_password,
@@ -38,7 +36,7 @@ def update_user(db: Session, user_id: int, user: UserUpdate):
         if key not in ["password", "confirm_password"]:
             setattr(db_user, key, value)
     if user.password:
-        db_user.hashed_password = pwd_context.hash(user.password)
+        db_user.hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     db.commit()
     db.refresh(db_user)
     return db_user
