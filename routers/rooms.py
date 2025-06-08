@@ -1,38 +1,32 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 from database import get_db
-from schemas import RoomBase, RoomOut, AssetOut
-from crud import create_room
-from models import Floor, Room, Asset
+from models import Room
+from schemas import RoomOut
+from typing import List
 
-router = APIRouter(prefix="/rooms", tags=["Помещения"])
+router = APIRouter(
+    prefix="/rooms",
+    tags=["rooms"]
+)
 
-@router.post("/", response_model=RoomOut)
-async def create_room_endpoint(room: RoomBase, db: Session = Depends(get_db)):
-    """Создает новое помещение на указанном этаже."""
-    db_floor = db.query(Floor).filter(Floor.id == room.floor_id).first()
-    if not db_floor:
-        raise HTTPException(status_code=404, detail="Этаж не найден")
-    return create_room(db, room)
+@router.get("/", response_model=List[RoomOut])
+def get_rooms(floor_id: int = None, db: Session = Depends(get_db)):
+    try:
+        print(f"Запрос комнат для floor_id: {floor_id}")
 
-@router.get("/{floor_id}", response_model=List[RoomOut])
-async def list_rooms(floor_id: int, db: Session = Depends(get_db)):
-    """Возвращает список всех помещений на указанном этаже."""
-    db_floor = db.query(Floor).filter(Floor.id == floor_id).first()
-    if not db_floor:
-        raise HTTPException(status_code=404, detail="Этаж не найден")
-    rooms = db.query(Room).filter(Room.floor_id == floor_id).all()
-    return rooms
+        query = db.query(Room)
+        if floor_id:
+            query = query.filter(Room.floor_id == floor_id)
 
-@router.get("/{room_id}", response_model=RoomOut)
-def get_room(room_id: int, db: Session = Depends(get_db)):
-    room = db.query(Room).filter(Room.id == room_id).first()
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-    return room
+        rooms = query.all()
+        print(f"Найдено комнат: {len(rooms)}")
 
-@router.get("/{room_id}/assets", response_model=List[AssetOut])
-def get_room_assets(room_id: int, db: Session = Depends(get_db)):
-    assets = db.query(Asset).filter(Asset.room_id == room_id).all()
-    return assets
+        if not rooms:
+            raise HTTPException(status_code=404, detail="Rooms not found")
+        return rooms
+    except HTTPException as http_err:
+        raise http_err
+    except Exception as e:
+        print(f"Ошибка при обработке запроса: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

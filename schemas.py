@@ -9,18 +9,29 @@ class UserBase(BaseModel):
     middle_name: Optional[str] = None
     role: str = "admin"
 
-class UserCreate(UserBase):
-    password: str
-    confirm_password: str
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str  # Добавьте это поле
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: str = "user"
 
-class UserUpdate(UserBase):
+    class Config:
+        from_attributes = True
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
     password: Optional[str] = None
-    confirm_password: Optional[str] = None
-    photo: Optional[str] = None
+    role: Optional[str] = None
 
-class UserOut(UserBase):
+    class Config:
+        from_attributes = True
+
+class UserOut(BaseModel):
     id: int
-    photo: Optional[str] = None
+    email: str
+    role: str
+
     class Config:
         from_attributes = True
 
@@ -61,26 +72,47 @@ class AssetBase(BaseModel):
     inventory_number: str
     photo: Optional[str] = None
 
-class AssetCreate(AssetBase):
+class AssetCreate(BaseModel):
+    name: str
+    category: str
+    status: str
+    room_id: int
+    responsible_user_id: int
+    inventory_number: str
+    photo: Optional[str] = None
     commissioned_date: Optional[datetime] = None
 
-class AssetOut(AssetBase):
+    class Config:
+        from_attributes = True
+
+class AssetUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    status: Optional[str] = None
+    room_id: Optional[int] = None
+    responsible_user_id: Optional[int] = None
+    inventory_number: Optional[str] = None
+    photo: Optional[str] = None
+    commissioned_date: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class AssetOut(BaseModel):
     id: int
-    commissioned_date: datetime
+    name: str
+    category: str
+    status: str
+    room_id: int
+    responsible_user_id: int
+    inventory_number: str
+    photo: Optional[str] = None
+    commissioned_date: Optional[datetime] = None
+
     class Config:
         from_attributes = True
 
 class Token(BaseModel):
     access_token: str
     token_type: str
-    role: str  # Добавьте это поле
-
-class UserOut(BaseModel):
-    id: int
-    email: str
     role: str
-    first_name: str
-    last_name: str
-
-    class Config:
-        from_attributes = True

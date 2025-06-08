@@ -1,46 +1,64 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 from database import get_db
-from schemas import AssetCreate, AssetOut
-from crud import create_asset, generate_qr_code
-from .auth import get_current_user
-from PIL import Image
 from models import Asset
-import io
+from schemas import AssetOut, AssetCreate, AssetUpdate  # Убедитесь, что схема определена
+from typing import List
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/assets",
+    tags=["assets"]
+)
 
-@router.post("/assets/", response_model=AssetOut)
-async def create_asset_endpoint(asset: AssetCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Нет прав доступа")
-    return create_asset(db, asset)
+@router.get("/", response_model=List[AssetOut])
+def get_assets(room_id: int = None, db: Session = Depends(get_db)):
+    try:
+        print(f"Запрос активов для room_id: {room_id}")
 
-@router.get("/assets/room/{room_id}", response_model=List[AssetOut])
-async def list_assets(room_id: int, db: Session = Depends(get_db)):
-    return db.query(Asset).filter(Asset.room_id == room_id).all()
+        query = db.query(Asset)
+        if room_id:
+            query = query.filter(Asset.room_id == room_id)
 
-@router.get("/assets/{inventory_number}", response_model=AssetOut)
-async def get_asset(inventory_number: str, db: Session = Depends(get_db)):
-    asset = db.query(Asset).filter(Asset.inventory_number == inventory_number).first()
-    if not asset:
-        raise HTTPException(status_code=404, detail="Имущество не найдено")
-    return asset
+        assets = query.all()
+        print(f"Найдено активов: {len(assets)}")
 
-@router.post("/assets/upload-photo/")
-async def upload_asset_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Заглушка для распознавания изображения (не реализовано)
-    image = Image.open(io.BytesIO(await file.read()))
-    # Симуляция распознавания
-    name = "Распознанный предмет"  # Замените на вывод реальной ML-модели
-    category = "Неизвестно"        # Замените на вывод реальной ML-модели
-    return {"name": name, "category": category}
+        if not assets:
+            raise HTTPException(status_code=404, detail="Assets not found")
+        return assets
+    except HTTPException as http_err:
+        raise http_err
+    except Exception as e:
+        print(f"Ошибка при обработке запроса: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.get("/assets/qr/{inventory_number}")
-async def get_qr_code(inventory_number: str, db: Session = Depends(get_db)):
-    asset = db.query(Asset).filter(Asset.inventory_number == inventory_number).first()
-    if not asset:
-        raise HTTPException(status_code=404, detail="Имущество не найдено")
-    qr_code = generate_qr_code(inventory_number)
-    return {"qr_code": f"data:image/png;base64,{qr_code}"}
+@router.post("/", response_model=AssetOut)
+def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
+    print(f"Создание актива: {asset}")
+    db_asset = Asset(**asset.dict())
+    db.add(db_asset)
+    db.commit()
+    db.refresh(db_asset)
+    return db_asset
+
+@router.put("/{asset_id}", response_model=AssetOut)
+def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db)):
+    print(f"Обновление актива с ID: {asset_id}")
+    db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    if not db_asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    update_data = asset.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_asset, key, value)
+    db.commit()
+    db.refresh(db_asset)
+    return db_asset
+
+@router.delete("/{asset_id}")
+def delete_asset(asset_id: int, db: Session = Depends(get_db)):
+    print(f"Удаление актива с ID: {asset_id}")
+    db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    if not db_asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    db.delete(db_asset)
+    db.commit()
+    return {"message": "Asset deleted successfully"}
